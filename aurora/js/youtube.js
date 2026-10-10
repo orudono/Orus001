@@ -84,7 +84,7 @@
           player = new YT.Player(holder, {
             width: '100%', height: '100%', videoId: isList ? undefined : track.ytId, playerVars: vars,
             events: {
-              onReady() { applyAudio(); armGrace(); clearInterval(poll); poll = setInterval(() => { hooks.onTick && hooks.onTick(); }, 500); },
+              onReady() { try { player.getIframe().referrerPolicy = 'strict-origin-when-cross-origin'; } catch (e) { /* ignore */ } applyAudio(); armGrace(); clearInterval(poll); poll = setInterval(() => { hooks.onTick && hooks.onTick(); }, 500); },
               onStateChange: onState, onError,
               onPlaybackRateChange(e) { rate = e.data; hooks.onRate && hooks.onRate(e.data); }
             }
