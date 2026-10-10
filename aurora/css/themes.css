@@ -1,0 +1,40 @@
+/* Theme tokens. Colours are registered with @property so a theme change
+   crossfades smoothly (gradients included) instead of flashing. */
+@property --accent          { syntax: '<color>'; inherits: true; initial-value: #8f6bff; }
+@property --accent-2        { syntax: '<color>'; inherits: true; initial-value: #3b82f6; }
+@property --accent-strong   { syntax: '<color>'; inherits: true; initial-value: #6d4fd9; }
+@property --accent-2-strong { syntax: '<color>'; inherits: true; initial-value: #2563eb; }
+
+:root {
+  /* Overwritten at runtime by themes.js (single source of truth lives in JS). */
+  --accent: #8f6bff;
+  --accent-2: #3b82f6;
+  --accent-strong: #6d4fd9;
+  --accent-2-strong: #2563eb;
+  --on-accent: #ffffff;
+  --intensity: 0.7;           /* 0..1 — strength of ambient lighting */
+  --art-amp: 6px;             /* artwork float amplitude */
+  --art-speed: 7s;
+
+  /* Surfaces are tinted very slightly by the accent. */
+  --bg:  color-mix(in srgb, #0b0b10 95%, var(--accent) 5%);
+  --s1:  color-mix(in srgb, #12121a 94%, var(--accent) 6%);
+  --s2:  color-mix(in srgb, #1a1a24 93%, var(--accent) 7%);
+  --s3:  color-mix(in srgb, #242431 92%, var(--accent) 8%);
+
+  --text:   #f2f1f7;
+  --text-2: #adacbd;
+  --text-3: #85849a;
+  --line: rgba(255, 255, 255, .08);
+  --line-strong: rgba(255, 255, 255, .18);
+  --danger: #ff6b7d;
+  --ok: #4fd8a1;
+  --warn: #ffc15e;
+
+  transition: --accent .6s ease, --accent-2 .6s ease, --accent-strong .6s ease, --accent-2-strong .6s ease;
+}
+
+/* Monochrome keeps surfaces perfectly neutral. */
+:root[data-theme="mono"] {
+  --bg: #0c0c0d; --s1: #131315; --s2: #1b1b1e; --s3: #252528;
+}

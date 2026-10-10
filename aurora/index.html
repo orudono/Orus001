@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en" data-theme="violet">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#0d0d12">
+<meta name="description" content="AURORA — a premium music player for YouTube, Spotify, direct audio URLs and local files, with an audio-reactive visualizer.">
+<title>AURORA — Music Player</title>
+<link rel="icon" href="assets/icons/aurora.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- Inline icon sprite (Lucide-style, stroke icons) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-skip-back" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/></symbol>
+    <symbol id="i-skip-forward" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+    <symbol id="i-repeat-1" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/><path d="M11 10h1v4"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+    <symbol id="i-volume-low" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></symbol>
+    <symbol id="i-volume-x" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-queue" viewBox="0 0 24 24"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-library" viewBox="0 0 24 24"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></symbol>
+    <symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+    <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/><path d="M8 12h.001"/><path d="M12 12h.001"/><path d="M16 12h.001"/><path d="M7 16h10"/></symbol>
+    <symbol id="i-panel" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+
+  <!-- ============ Sidebar / bottom nav ============ -->
+  <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs>
+        <rect x="2" y="2" width="28" height="28" rx="9" fill="url(#bm)"/>
+        <path d="M8 21c3-9 5-9 8 0s5 9 8-1" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".95"/>
+      </svg>
+      <span class="brand-name">AURORA</span>
+      <button class="icon-btn collapse-btn" id="collapseBtn" data-tip="Collapse sidebar" aria-label="Collapse sidebar" aria-pressed="false"><svg class="i"><use href="#i-panel"/></svg></button>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="nav-item" data-view="home"><svg class="i"><use href="#i-home"/></svg><span>Home</span></button>
+      <button class="nav-item" data-view="recent"><svg class="i"><use href="#i-clock"/></svg><span><span class="l">Recently Played</span><span class="s">Recent</span></span></button>
+      <button class="nav-item" data-view="favorites"><svg class="i"><use href="#i-heart"/></svg><span>Favorites</span></button>
+      <button class="nav-item" data-view="playlists"><svg class="i"><use href="#i-library"/></svg><span>Playlists</span></button>
+      <button class="nav-item" data-view="library"><svg class="i"><use href="#i-folder"/></svg><span><span class="l">Local Library</span><span class="s">Library</span></span></button>
+      <button class="nav-item" data-view="visualizer"><svg class="i"><use href="#i-wave"/></svg><span><span class="l">Audio Visualizer</span><span class="s">Visualizer</span></span></button>
+      <button class="nav-item" data-view="settings"><svg class="i"><use href="#i-sliders"/></svg><span>Appearance</span></button>
+      <button class="nav-item nav-more" id="navMore" aria-haspopup="menu"><svg class="i"><use href="#i-more"/></svg><span>More</span></button>
+    </nav>
+    <p class="sidebar-foot">Spotify and YouTube play through their official embedded players.</p>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <div class="main-col">
+    <header class="topbar">
+      <div class="topbar-brand">
+        <svg class="brand-mark sm" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="9" fill="var(--accent-strong)"/><path d="M8 21c3-9 5-9 8 0s5 9 8-1" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <span class="brand-name">AURORA</span>
+      </div>
+      <h1 class="page-title" id="pageTitle">Home</h1>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeBtn" data-tip="Themes" aria-label="Open theme selector"><svg class="i"><use href="#i-droplet"/></svg></button>
+      </div>
+    </header>
+
+    <main class="main" id="main" tabindex="-1">
+      <div class="main-inner" id="mainInner">
+
+        <!-- HOME -->
+        <section class="view" id="view-home" data-view="home" aria-labelledby="pageTitle">
+          <div class="home-grid">
+            <div class="stage" id="stage" aria-label="Now playing">
+              <div class="ambient" id="ambient" aria-hidden="true"></div>
+              <div class="media-slot" id="mediaSlot" data-kind="audio">
+                <div class="art-frame" id="artFrame">
+                  <img id="artImg" alt="" draggable="false">
+                  <div class="art-skeleton" aria-hidden="true"></div>
+                </div>
+              </div>
+              <div class="np">
+                <div class="np-top">
+                  <span class="badge" id="npBadge" hidden></span>
+                  <span class="np-status" id="npStatus" role="status" aria-live="polite"></span>
+                </div>
+                <h2 class="np-title" id="npTitle">Nothing playing</h2>
+                <p class="np-artist" id="npArtist">Paste a link or add local files to begin.</p>
+                <p class="np-album" id="npAlbum"></p>
+                <div class="np-error" id="npError" role="alert" hidden></div>
+                <div class="np-actions">
+                  <button class="icon-btn lg" id="npFav" data-tip="Add to favorites" aria-label="Add to favorites" aria-pressed="false"><svg class="i"><use href="#i-heart"/></svg></button>
+                  <button class="icon-btn lg" id="npAddPl" data-tip="Add to playlist" aria-label="Add to playlist"><svg class="i"><use href="#i-plus"/></svg></button>
+                  <button class="icon-btn lg" id="npMore" data-tip="More actions" aria-label="More actions" aria-haspopup="menu"><svg class="i"><use href="#i-more"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="side-col">
+              <form class="panel input-panel" id="loadForm" novalidate>
+                <label class="panel-title" for="urlInput">Play something</label>
+                <div class="input-row" id="inputRow">
+                  <svg class="i lead" aria-hidden="true"><use href="#i-link"/></svg>
+                  <input id="urlInput" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="2048" placeholder="Paste a Spotify, YouTube, or audio URL..." aria-describedby="urlHint urlError">
+                  <button type="button" class="icon-btn sm" id="urlClear" data-tip="Clear" aria-label="Clear input" hidden><svg class="i"><use href="#i-x"/></svg></button>
+                </div>
+                <div class="input-meta">
+                  <span class="detect" id="urlHint" aria-live="polite">Supports YouTube, Spotify and direct audio links.</span>
+                </div>
+                <p class="field-error" id="urlError" role="alert" hidden></p>
+                <div class="btn-row">
+                  <button type="submit" class="btn primary" id="loadBtn"><span class="btn-label">Play</span><span class="spinner" aria-hidden="true"></span></button>
+                  <button type="button" class="btn" id="queueBtn"><svg class="i"><use href="#i-plus"/></svg>Add to queue</button>
+                  <button type="button" class="btn ghost" id="browseBtn"><svg class="i"><use href="#i-upload"/></svg>Local files</button>
+                </div>
+                <div class="recent-links" id="recentLinksWrap" hidden>
+                  <div class="row-between"><span class="eyebrow">Recently imported</span><button type="button" class="link-btn" id="clearImports">Clear</button></div>
+                  <ul class="chips" id="recentLinks"></ul>
+                </div>
+              </form>
+
+              <div class="panel up-next">
+                <div class="row-between"><span class="panel-title">Up next</span><button class="link-btn" id="openQueue2">Open queue</button></div>
+                <div id="upNext"></div>
+              </div>
+
+              <details class="panel notes">
+                <summary>How playback works</summary>
+                <ul>
+                  <li><strong>Direct URLs &amp; local files</strong> play in AURORA with full controls and real-time visualization (when the server allows CORS).</li>
+                  <li><strong>YouTube</strong> plays through the official YouTube player. Some videos block embedding.</li>
+                  <li><strong>Spotify</strong> plays through the official Spotify embed. Full tracks need a Spotify login in the embed; otherwise previews play. Spotify's audio is never exposed to AURORA.</li>
+                  <li id="demoLi" hidden>No link handy? <button type="button" class="link-btn" id="demoBtn">Play the built-in demo tone</button> (a short synthetic sound, handy for trying the visualizer).</li>
+                </ul>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <!-- RECENT -->
+        <section class="view" id="view-recent" data-view="recent" hidden>
+          <div class="view-head"><div><h2 class="view-title">Recently Played</h2><p class="muted">Tracks you've loaded successfully.</p></div><button class="btn ghost" id="clearRecent">Clear history</button></div>
+          <div id="recentList"></div>
+        </section>
+
+        <!-- FAVORITES -->
+        <section class="view" id="view-favorites" data-view="favorites" hidden>
+          <div class="view-head"><div><h2 class="view-title">Favorites</h2><p class="muted">Saved references to the tracks you love.</p></div><button class="btn" id="playAllFav"><svg class="i"><use href="#i-play"/></svg>Play all</button></div>
+          <div id="favList"></div>
+        </section>
+
+        <!-- PLAYLISTS -->
+        <section class="view" id="view-playlists" data-view="playlists" hidden>
+          <div class="view-head"><div><h2 class="view-title">Playlists</h2><p class="muted">Playlists are saved on this device.</p></div><button class="btn primary" id="newPlaylist"><svg class="i"><use href="#i-plus"/></svg>New playlist</button></div>
+          <p class="callout"><svg class="i"><use href="#i-info"/></svg><span>Spotify and YouTube entries are <em>references</em> to external content. Saving a link doesn't give AURORA (or you) access to the media itself — playback still follows each service's rules.</span></p>
+          <div class="pl-layout">
+            <div id="plList" class="pl-list"></div>
+            <div id="plDetail" class="pl-detail"></div>
+          </div>
+        </section>
+
+        <!-- LOCAL LIBRARY -->
+        <section class="view" id="view-library" data-view="library" hidden>
+          <div class="view-head"><div><h2 class="view-title">Local Library</h2><p class="muted">Files stay on your device. Nothing is uploaded.</p></div>
+            <div class="btn-row"><button class="btn primary" id="libBrowse"><svg class="i"><use href="#i-upload"/></svg>Add files</button><button class="btn ghost" id="libClear">Clear library</button></div></div>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Drop audio files here or press Enter to browse">
+            <svg class="i xl"><use href="#i-music"/></svg>
+            <strong>Drop audio files here</strong>
+            <span class="muted">MP3, WAV, OGG, AAC/M4A, FLAC, Opus — whatever your browser can decode.</span>
+          </div>
+          <div id="libList"></div>
+        </section>
+
+        <!-- VISUALIZER -->
+        <section class="view" id="view-visualizer" data-view="visualizer" hidden>
+          <div class="viz-stage" id="vizStage">
+            <div class="viz-bg" id="vizBg" aria-hidden="true"></div>
+            <canvas id="vizCanvas" role="img" aria-label="Audio visualization"></canvas>
+            <div class="viz-hud">
+              <div class="viz-status" id="vizStatus" role="status" aria-live="polite"><span class="dot"></span><span id="vizStatusText">AUDIO ANALYSIS UNAVAILABLE</span></div>
+              <div class="viz-track"><strong id="vizTitle">Nothing playing</strong><span id="vizArtist"></span></div>
+              <div class="viz-hud-actions">
+                <button class="icon-btn" id="vizPause" data-tip="Pause visual animation" aria-label="Pause visual animation" aria-pressed="false"><svg class="i"><use href="#i-pause"/></svg></button>
+                <button class="icon-btn" id="vizFull" data-tip="Fullscreen (F)" aria-label="Fullscreen visualizer"><svg class="i"><use href="#i-maximize"/></svg></button>
+              </div>
+            </div>
+            <p class="viz-note" id="vizNote" hidden></p>
+          </div>
+          <div class="viz-controls panel">
+            <div class="mode-tabs" id="vizModes" role="radiogroup" aria-label="Visualization mode"></div>
+            <div class="ctrl-grid" id="vizCtrls">
+              <label class="ctrl"><span>Sensitivity</span><input type="range" id="vzSens" min="0.4" max="3" step="0.05"><output></output></label>
+              <label class="ctrl"><span>Smoothing</span><input type="range" id="vzSmooth" min="0" max="0.95" step="0.01"><output></output></label>
+              <label class="ctrl"><span>Particle density</span><input type="range" id="vzDensity" min="20" max="100" step="5"><output></output></label>
+              <label class="ctrl"><span>Color intensity</span><input type="range" id="vzColor" min="0.3" max="1.5" step="0.05"><output></output></label>
+              <label class="ctrl"><span>Background brightness</span><input type="range" id="vzBright" min="0" max="1" step="0.05"><output></output></label>
+            </div>
+            <div class="toggle-row">
+              <label class="switch"><input type="checkbox" id="vzBgArt"><span class="track"></span><span>Background artwork</span></label>
+              <label class="switch"><input type="checkbox" id="vzLabels"><span class="track"></span><span>Frequency labels</span></label>
+              <label class="switch"><input type="checkbox" id="vzMirror"><span class="track"></span><span>Symmetrical waveform</span></label>
+              <label class="switch"><input type="checkbox" id="vzReduce"><span class="track"></span><span>Reduce motion</span></label>
+              <button class="btn ghost" id="vzReset">Reset visualizer settings</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- APPEARANCE / SETTINGS -->
+        <section class="view" id="view-settings" data-view="settings" hidden>
+          <div class="view-head"><div><h2 class="view-title">Appearance &amp; Settings</h2><p class="muted">Everything is saved automatically on this device.</p></div></div>
+
+          <div class="settings-grid">
+            <div class="panel">
+              <h3 class="panel-title">Theme</h3>
+              <div class="swatches" id="themeSwatches" role="radiogroup" aria-label="Color theme"></div>
+              <div class="custom-colors" id="customColors" hidden>
+                <label class="color-field"><span>Primary</span><input type="color" id="customA"></label>
+                <label class="color-field"><span>Secondary</span><input type="color" id="customB"></label>
+              </div>
+              <label class="ctrl"><span>Visual intensity</span><input type="range" id="stIntensity" min="0" max="100" step="1"><output></output></label>
+              <label class="switch"><input type="checkbox" id="stAuto"><span class="track"></span><span>Accent from artwork <small>(when the image allows it)</small></span></label>
+            </div>
+
+            <div class="panel">
+              <h3 class="panel-title">Motion</h3>
+              <label class="ctrl"><span>Artwork animation</span><input type="range" id="stArtMotion" min="0" max="100" step="5"><output></output></label>
+              <div class="seg" id="stArtStyle" role="radiogroup" aria-label="Artwork animation style">
+                <button type="button" role="radio" data-v="float">Float</button>
+                <button type="button" role="radio" data-v="spin">Slow rotation</button>
+              </div>
+              <label class="ctrl"><span>Reduce motion</span>
+                <select id="stReduce"><option value="system">Follow system</option><option value="on">Always</option><option value="off">Never</option></select></label>
+            </div>
+
+            <div class="panel">
+              <h3 class="panel-title">Local files</h3>
+              <label class="switch"><input type="checkbox" id="stRemember"><span class="track"></span><span>Remember imported files on this device <small>(stored in your browser's IndexedDB; never uploaded)</small></span></label>
+            </div>
+
+            <div class="panel wide">
+              <div class="row-between"><h3 class="panel-title">Keyboard shortcuts</h3>
+                <label class="switch"><input type="checkbox" id="stKeys"><span class="track"></span><span>Enabled</span></label></div>
+              <div class="keys" id="keyList"></div>
+              <button class="btn ghost" id="keysReset">Restore default shortcuts</button>
+            </div>
+
+            <div class="panel wide">
+              <h3 class="panel-title">Your data</h3>
+              <p class="muted">Export settings, favorites, recents and playlist metadata as JSON. Local audio files are never included.</p>
+              <div class="btn-row">
+                <button class="btn" id="exportBtn"><svg class="i"><use href="#i-download"/></svg>Export JSON</button>
+                <button class="btn" id="importBtn"><svg class="i"><use href="#i-upload"/></svg>Import JSON</button>
+                <button class="btn danger" id="resetBtn"><svg class="i"><use href="#i-trash"/></svg>Reset everything</button>
+              </div>
+            </div>
+
+            <div class="panel wide">
+              <h3 class="panel-title">About the limits</h3>
+              <ul class="plain">
+                <li>Real frequency analysis works for <strong>local files</strong> and <strong>direct URLs whose server sends CORS headers</strong>.</li>
+                <li>YouTube and Spotify embeds never expose audio to web pages, so AURORA shows a clearly labelled <em>ambient</em> visual for them instead.</li>
+                <li>AURORA never downloads, proxies or decrypts YouTube/Spotify streams.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Official embedded players. Positioned over the Home slot or docked while browsing elsewhere. -->
+        <div class="embed-host" id="embedHost" hidden>
+          <div class="embed-bar"><span id="embedLabel">Player</span><button type="button" class="link-btn" id="embedShow">Show on Home</button></div>
+          <div class="embed-body" id="embedBody">
+            <div id="ytMount" hidden></div>
+            <div id="spMount" hidden></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============ Playback bar ============ -->
+  <footer class="playbar" id="playbar" aria-label="Playback controls">
+    <div class="pb-left">
+      <img class="pb-art" id="pbArt" alt="" draggable="false">
+      <div class="pb-text"><strong id="pbTitle">Nothing playing</strong><span id="pbArtist">—</span></div>
+      <button class="icon-btn" id="pbFav" data-tip="Add to favorites" aria-label="Add to favorites" aria-pressed="false"><svg class="i"><use href="#i-heart"/></svg></button>
+      <button class="icon-btn pb-queue-m" id="pbQueueM" data-tip="Queue" aria-label="Open queue"><svg class="i"><use href="#i-queue"/></svg></button>
+    </div>
+
+    <div class="pb-center">
+      <div class="pb-controls">
+        <button class="icon-btn" id="pbShuffle" data-tip="Shuffle" aria-label="Shuffle" aria-pressed="false"><svg class="i"><use href="#i-shuffle"/></svg></button>
+        <button class="icon-btn" id="pbPrev" data-tip="Previous (P)" aria-label="Previous track"><svg class="i fill"><use href="#i-skip-back"/></svg></button>
+        <button class="play-btn" id="pbPlay" data-tip="Play (Space)" aria-label="Play" disabled>
+          <svg class="i fill ic-play"><use href="#i-play"/></svg><svg class="i fill ic-pause"><use href="#i-pause"/></svg><span class="spinner" aria-hidden="true"></span>
+        </button>
+        <button class="icon-btn" id="pbNext" data-tip="Next (N)" aria-label="Next track"><svg class="i fill"><use href="#i-skip-forward"/></svg></button>
+        <button class="icon-btn" id="pbRepeat" data-tip="Repeat: off" aria-label="Repeat: off" aria-pressed="false"><svg class="i"><use href="#i-repeat"/></svg></button>
+      </div>
+      <div class="pb-progress">
+        <time id="pbCur">0:00</time>
+        <div class="seek-wrap" id="seekWrap">
+          <input type="range" id="pbSeek" class="slider seek" min="0" max="1000" step="1" value="0" aria-label="Seek" disabled>
+          <span class="seek-tip" id="seekTip" aria-hidden="true">0:00</span>
+        </div>
+        <time id="pbDur">–:––</time>
+      </div>
+    </div>
+
+    <div class="pb-right">
+      <button class="icon-btn txt" id="pbSpeed" data-tip="Playback speed" aria-label="Playback speed: 1×" disabled>1×</button>
+      <button class="icon-btn" id="pbMute" data-tip="Mute (M)" aria-label="Mute"><svg class="i"><use href="#i-volume"/></svg></button>
+      <input type="range" id="pbVol" class="slider vol" min="0" max="100" step="1" value="80" aria-label="Volume">
+      <button class="icon-btn" id="pbQueue" data-tip="Queue" aria-label="Open queue"><svg class="i"><use href="#i-queue"/></svg></button>
+      <button class="icon-btn" id="pbViz" data-tip="Visualizer" aria-label="Open visualizer" aria-pressed="false"><svg class="i"><use href="#i-wave"/></svg></button>
+      <button class="icon-btn" id="pbFull" data-tip="Expanded view (F)" aria-label="Expanded fullscreen view"><svg class="i"><use href="#i-maximize"/></svg></button>
+    </div>
+  </footer>
+</div>
+
+<!-- Drawers (queue + theme). Bottom sheets on mobile. -->
+<dialog class="drawer" id="queueDrawer" aria-labelledby="queueTitle">
+  <div class="drawer-head"><h2 id="queueTitle">Queue</h2><span class="muted" id="queueCount"></span><div class="spacer"></div>
+    <button class="btn ghost sm" id="queueClear">Clear</button>
+    <button class="icon-btn" data-close aria-label="Close queue"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="drawer-body" id="queueBody"></div>
+</dialog>
+
+<dialog class="drawer" id="themeDrawer" aria-labelledby="themeTitle">
+  <div class="drawer-head"><h2 id="themeTitle">Themes</h2><div class="spacer"></div>
+    <button class="icon-btn" data-close aria-label="Close themes"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="drawer-body">
+    <div class="swatches" id="themeSwatches2" role="radiogroup" aria-label="Color theme"></div>
+    <div class="custom-colors" id="customColors2" hidden>
+      <label class="color-field"><span>Primary</span><input type="color" id="customA2"></label>
+      <label class="color-field"><span>Secondary</span><input type="color" id="customB2"></label>
+    </div>
+    <label class="ctrl"><span>Visual intensity</span><input type="range" id="stIntensity2" min="0" max="100" step="1"><output></output></label>
+  </div>
+</dialog>
+
+<!-- Generic modal -->
+<dialog class="modal" id="dlg" aria-labelledby="dlgTitle"><form method="dialog" id="dlgForm"></form></dialog>
+
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.ogg,.oga,.opus,.m4a,.aac,.flac,.weba" multiple hidden>
+<input type="file" id="jsonInput" accept="application/json,.json" hidden>
+<div class="drop-overlay" id="dropOverlay" aria-hidden="true"><div><svg class="i xl"><use href="#i-upload"/></svg><strong>Drop audio files to add them</strong></div></div>
+
+<noscript><p style="padding:24px">AURORA needs JavaScript enabled.</p></noscript>
+
+<script src="js/ui.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/providers.js"></script>
+<script src="js/local.js"></script>
+<script src="js/queue.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/youtube.js"></script>
+<script src="js/spotify.js"></script>
+<script src="js/player.js"></script>
+<script src="js/visualizer.js"></script>
+<script src="js/keyboard.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
