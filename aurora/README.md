@@ -16,17 +16,17 @@ AURORA is static files. Any of these works — **option A is the easiest**.
 
 ### A. `start-aurora.bat` (recommended)
 1. Unzip the folder anywhere (e.g. `C:\aurora`).
-2. Double-click **`start-aurora.bat`**. It starts a tiny local server on port 8080 and opens `http://localhost:8080/index.html`.
+2. Double-click **`start-aurora.bat`**. It starts a tiny local server on port 8765 and opens `http://localhost:8765/index.html`.
    * Needs **Python 3** ([python.org](https://www.python.org/downloads/), tick *Add python.exe to PATH*) **or** **Node.js** ([nodejs.org](https://nodejs.org/)). Windows 10/11 usually offers Python through `py`.
 3. Close the black console window to stop the server.
 
 ### B. PowerShell / Command Prompt
 ```powershell
 cd C:\aurora
-py -m http.server 8080          # or: python -m http.server 8080
-# then open http://localhost:8080
+py -m http.server 8765          # or: python -m http.server 8765
+# then open http://localhost:8765
 ```
-With Node instead: `npx serve -l 8080 .`
+With Node instead: `npx serve -l 8765 .`
 
 ### C. VS Code
 Install the **Live Server** extension, right-click `index.html` → *Open with Live Server*.
