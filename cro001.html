@@ -108,6 +108,7 @@ canvas:active { cursor: grabbing; }
     <h2>Pattern</h2>
     <div class="stats" id="stats"></div>
     <div id="pattern"></div>
+    <div class="legend" id="glegend" style="display:none"><b>Mô hình:</b> ◉ dc (mũi cao) · ✚ sc (mũi đơn) · ○ ch (mũi xích) · • sl st · ● tâm MR · nét liền = đường đi của sợi · nét đứt = mũi được móc vào ở vòng trước</div>
     <div class="legend"><b>Ký hiệu:</b> MR = magic ring · sc = mũi đơn · inc = tăng (2 sc vào 1 mũi) · dec = giảm (gộp 2 mũi) · FO = cắt chỉ</div>
   </section>
 </main>
@@ -335,9 +336,11 @@ canvas:active { cursor: grabbing; }
     document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
     $('ctlAmi').style.display = mode === 'ami' ? '' : 'none';
     $('ctlGran').style.display = mode === 'granny' ? '' : 'none';
+    $('glegend').style.display = mode === 'granny' ? '' : 'none';
     document.querySelector('.hint').textContent = mode === 'ami'
       ? 'Kéo chuột để xoay · cuộn chuột để zoom · click một vòng ở bên phải để làm nổi bật trên mô hình'
-      : 'Click một vòng ở bên phải để làm nổi bật phần tương ứng trên mẫu granny';
+      : 'Mỗi mũi là một nút (ball-and-stick) · kéo để xoay, cuộn để zoom · click một vòng để làm nổi bật';
+    if (mode === 'granny') { rotX = 0.4; rotY = 0.3; zoom = 1; } else { rotX = 0.35; rotY = 0.6; zoom = 1; }
     generate();
   });
 
@@ -369,7 +372,7 @@ canvas:active { cursor: grabbing; }
       div.innerHTML = '<input type="checkbox"><span class="n"><i class="dot" style="background:' + r.col + '"></i>' + r.label + '</span><span>' + r.text + '</span><span class="c">[' + r.count + ']</span>';
       const cb = div.querySelector('input');
       cb.onclick = e => { e.stopPropagation(); div.classList.toggle('done', cb.checked); };
-      div.onclick = () => { hl = r.layer; [...el.children].forEach(c => c.classList.remove('hl')); div.classList.add('hl'); draw(); };
+      div.onclick = () => { hl = i; [...el.children].forEach(c => c.classList.remove('hl')); div.classList.add('hl'); draw(); };
       el.appendChild(div);
     });
     const note = document.createElement('div');
@@ -380,80 +383,148 @@ canvas:active { cursor: grabbing; }
   function generateGranny() {
     buildGrannyList();
     const P = +$('petals').value, B = +$('bord').value;
-    $('stats').innerHTML = '<div><b>' + (5 + B) + '</b>vòng</div><div><b>' + P + '</b>cánh</div><div><b>4</b>màu</div>';
+    $('stats').innerHTML = '<div><b>' + (5 + B) + '</b>vòng</div><div><b>' + P + '</b>cánh</div><div><b>' + buildGrannyModel(P, B).nodes.length + '</b>nút (mũi)</div>';
     hl = -1; draw();
   }
+  // Mỗi mũi = 1 "nguyên tử" (nút) có kiểu cố định; liên kết = đường sợi + mũi cha ở vòng trước.
+  function buildGrannyModel(P, B) {
+    const TAU = Math.PI * 2, nodes = [], rounds = [];
+    const add = (t, r, x, y, p) => { nodes.push({ t, r, x, y, z: r * 1.6, p }); return nodes.length - 1; };
+    const pol = (rad, a) => [rad * Math.cos(a), rad * Math.sin(a)];
+    const mr = add('mr', 0, 0, 0, -1);
+    rounds[0] = [mr];
+    // R1
+    const R1 = [];
+    for (let k = 0; k < 2 * P; k++) { const [x, y] = pol(5, (k + 0.5) / (2 * P) * TAU); R1.push(add('dc', 1, x, y, mr)); }
+    rounds[1] = R1;
+    // R2: dc, 2dc
+    const R2 = [];
+    for (let g = 0; g < P; g++) for (let j = 0; j < 3; j++) {
+      const [x, y] = pol(10, (3 * g + j + 0.5) / (3 * P) * TAU);
+      R2.push(add('dc', 2, x, y, j === 0 ? R1[2 * g] : R1[2 * g + 1]));
+    }
+    rounds[2] = R2;
+    // R3: cánh = (3dc, ch2, 3dc) trong 1 mũi, rồi sl st
+    const R3 = [], chSp = [], slN = [];
+    for (let g = 0; g < P; g++) {
+      const phi = (g + 0.5) / P * TAU, u = [Math.cos(phi), Math.sin(phi)], t = [-Math.sin(phi), Math.cos(phi)];
+      const s1 = R2[3 * g + 1], s2 = R2[3 * g + 2];
+      const at = (rad, lat) => [u[0] * rad + t[0] * lat, u[1] * rad + t[1] * lat];
+      [[15.5, -3.2], [17.5, -2.2], [19, -1.1]].forEach(([r, l]) => { const [x, y] = at(r, l); R3.push(add('dc', 3, x, y, s1)); });
+      let first = -1;
+      [-0.6, 0.6].forEach(l => { const [x, y] = at(21.2, l); const id = add('ch', 3, x, y, s1); if (first < 0) first = id; R3.push(id); });
+      chSp.push(first);
+      [[19, 1.1], [17.5, 2.2], [15.5, 3.2]].forEach(([r, l]) => { const [x, y] = at(r, l); R3.push(add('dc', 3, x, y, s1)); });
+      const [sx, sy] = pol(12.5, (3 * g + 2.5) / (3 * P) * TAU);
+      const sid = add('sl', 3, sx, sy, s2); R3.push(sid); slN.push(sid);
+    }
+    rounds[3] = R3;
+    // R4: sc trong ch-sp, ch6, sc giữa 2 cánh, ch6
+    const R4 = [], arcCh = new Array(2 * P);
+    for (let g = 0; g < P; g++) {
+      const aA = (g + 0.5) / P * TAU, aB = (g + 1) / P * TAU, aN = (g + 1.5) / P * TAU;
+      let [x, y] = pol(24, aA); R4.push(add('sc', 4, x, y, chSp[g]));
+      const c1 = [];
+      for (let j = 1; j <= 6; j++) { [x, y] = pol(26.5 + Math.sin(Math.PI * j / 7), aA + (aB - aA) * j / 7); const id = add('ch', 4, x, y, -1); c1.push(id); R4.push(id); }
+      arcCh[(2 * g + 1) % (2 * P)] = c1;
+      [x, y] = pol(24, aB); R4.push(add('sc', 4, x, y, slN[g]));
+      const c2 = [];
+      for (let j = 1; j <= 6; j++) { [x, y] = pol(26.5 + Math.sin(Math.PI * j / 7), aB + (aN - aB) * j / 7); const id = add('ch', 4, x, y, -1); c2.push(id); R4.push(id); }
+      arcCh[(2 * g + 2) % (2 * P)] = c2;
+    }
+    rounds[4] = R4;
+    // R5: 7 dc vào mỗi vòm ch-6
+    const R5 = [];
+    for (let i = 0; i < 2 * P; i++) for (let j = 0; j < 7; j++) {
+      const [x, y] = pol(31, (i + (j + 0.5) / 7) / (2 * P) * TAU);
+      R5.push(add('dc', 5, x, y, arcCh[i][Math.round(j * 5 / 6)]));
+    }
+    rounds[5] = R5;
+    // viền vuông: mỗi 1/4 vòng có 1 góc; dc mỗi mũi, góc = (2dc, ch2, 2dc)
+    const Q = 3.5 * P;
+    let prevQ = [];
+    for (let q = 0; q < 4; q++) prevQ.push(R5.slice(q * Q, (q + 1) * Q));
+    for (let bi = 0; bi < B; bi++) {
+      const r = 6 + bi, h = 34 + 3.8 * bi, all = [];
+      const nextQ = [];
+      for (let q = 0; q < 4; q++) {
+        const seq = [];
+        if (bi === 0) {
+          const a = Math.floor((Q - 1) / 2);
+          prevQ[q].forEach((pid, k) => {
+            if (k === a) ['dc', 'dc', 'ch', 'ch', 'dc', 'dc'].forEach(t => seq.push({ t, p: pid }));
+            else seq.push({ t: 'dc', p: pid });
+          });
+        } else {
+          const pq = prevQ[q];
+          for (let k = 0; k < pq.length; k++) {
+            const n = nodes[pq[k]];
+            if (n.t === 'ch') { if (nodes[pq[k - 1]].t !== 'ch') ['dc', 'dc', 'ch', 'ch', 'dc', 'dc'].forEach(t => seq.push({ t, p: pq[k] })); }
+            else seq.push({ t: 'dc', p: pq[k] });
+          }
+        }
+        const n = seq.length, ch = seq.map((e, i) => e.t === 'ch' ? i : -1).filter(i => i >= 0);
+        const cg = (ch[0] + ch[1]) / 2, l = 2 * h / n, ids = [];
+        const ca = Math.cos(q * Math.PI / 2), sa = Math.sin(q * Math.PI / 2);
+        seq.forEach((e, j) => {
+          const uu = Math.max(0, Math.min(2 * h, h + (j - cg) * l));
+          const x0 = uu <= h ? h : h - (uu - h), y0 = uu <= h ? uu : h;
+          ids.push(add(e.t, r, x0 * ca - y0 * sa, x0 * sa + y0 * ca, e.p));
+        });
+        nextQ.push(ids); all.push(...ids);
+      }
+      rounds[r] = all; prevQ = nextQ;
+    }
+    return { nodes, rounds };
+  }
+
   function drawGranny(w, h) {
     const P = +$('petals').value, B = +$('bord').value;
-    const c = [0, 1, 2, 3].map(i => $('gc' + i).value);
-    const half = 38 + 4 * B;
-    const sc = Math.min(w, h) * 0.46 / half;
-    ctx.save();
-    ctx.translate(w / 2, h / 2); ctx.scale(sc, sc);
-    const A = layer => { ctx.globalAlpha = (hl < 0 || hl === layer) ? 1 : 0.25; };
-    const line = col => { ctx.strokeStyle = shade(col, 0.6); ctx.lineWidth = 0.5; };
-    // border: rounded square
-    A(3);
-    ctx.fillStyle = c[3]; line(c[3]);
-    ctx.beginPath(); ctx.roundRect(-half, -half, half * 2, half * 2, 7); ctx.fill(); ctx.stroke();
-    // stitch texture on border
-    ctx.strokeStyle = shade(c[3], 0.72); ctx.lineWidth = 0.6;
-    for (let k = 0; k < B; k++) {
-      const d = half - 2 - k * 4;
-      for (let t = -d + 3; t < d - 2; t += 3) {
-        [[t, -d], [t, d], [-d, t], [d, t]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x - 0.8, y - 1.2); ctx.lineTo(x + 0.8, y + 1.2); ctx.stroke(); });
-      }
-    }
-    // corner holes
-    ctx.fillStyle = '#e9e2d6';
-    const ch = half * 0.8;
-    [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy]) => {
-      ctx.save(); ctx.translate(sx * ch, sy * ch); ctx.rotate(Math.PI / 4);
-      ctx.fillRect(-2.2, -2.2, 4.4, 4.4); ctx.restore();
+    const cols = [0, 1, 2, 3].map(i => $('gc' + i).value);
+    const colOf = r => r <= 2 ? cols[0] : r === 3 ? cols[1] : r <= 5 ? cols[2] : cols[3];
+    const { nodes, rounds: rds } = buildGrannyModel(P, B);
+    const half = 34 + 3.8 * (B - 1);
+    const sc = Math.min(w, h) * 0.42 / (half * 1.2) * zoom;
+    const cyA = Math.cos(rotY), syA = Math.sin(rotY), cxA = Math.cos(rotX), sxA = Math.sin(rotX);
+    const zc = (6 + B) * 0.8;
+    const pr = nodes.map(n => {
+      const x = n.x, y = -n.y, z = n.z - zc;
+      const x1 = x * cyA + z * syA, z1 = -x * syA + z * cyA;
+      const y1 = y * cxA - z1 * sxA, z2 = y * sxA + z1 * cxA;
+      return { x: w / 2 + x1 * sc, y: h / 2 + y1 * sc, z: z2 };
     });
-    ctx.globalAlpha = 1;
-    // transition ring
-    A(2);
-    ctx.fillStyle = shade(c[2], 0.8);
-    ctx.beginPath(); ctx.arc(0, 0, 37, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = c[2]; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 34.5, 0, Math.PI * 2); ctx.stroke();
-    ctx.strokeStyle = shade(c[2], 0.6); ctx.lineWidth = 0.5;
-    for (let k = 0; k < P * 14; k++) {
-      const a = k / (P * 14) * Math.PI * 2;
-      ctx.beginPath(); ctx.moveTo(Math.cos(a) * 32, Math.sin(a) * 32); ctx.lineTo(Math.cos(a + 0.05) * 37, Math.sin(a + 0.05) * 37); ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    // petals
-    A(1);
-    const r0 = 10, r1 = 32, wmax = Math.min(10, Math.PI * 2 * r1 / P * 0.3);
-    for (let k = 0; k < P; k++) {
-      ctx.save(); ctx.rotate(k / P * Math.PI * 2 + Math.PI / P * 0);
-      ctx.fillStyle = c[1]; line(c[1]); ctx.lineWidth = 0.7;
-      ctx.beginPath();
-      ctx.moveTo(r0, 0);
-      ctx.bezierCurveTo(r0 + 4, -wmax * 0.5, r1 - 14, -wmax * 1.5, r1 - 3, -wmax * 0.9);
-      ctx.bezierCurveTo(r1 + 3, -wmax * 0.5, r1 + 3, wmax * 0.5, r1 - 3, wmax * 0.9);
-      ctx.bezierCurveTo(r1 - 14, wmax * 1.5, r0 + 4, wmax * 0.5, r0, 0);
-      ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = shade(c[1], 0.75); ctx.lineWidth = 0.5;
-      for (let t = r0 + 4; t < r1 - 2; t += 2.6) { ctx.beginPath(); ctx.moveTo(t, -wmax * 0.5); ctx.lineTo(t + 1.6, wmax * 0.5); ctx.stroke(); }
-      ctx.fillStyle = shade(c[1], 0.45);
-      ctx.beginPath(); ctx.ellipse(r0 + (r1 - r0) * 0.62, 0, 2.6, 2, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    }
-    ctx.globalAlpha = 1;
-    // center star
-    A(0);
-    ctx.fillStyle = c[0]; line(c[0]);
-    for (let k = 0; k < P; k++) {
-      ctx.save(); ctx.rotate((k + 0.5) / P * Math.PI * 2);
-      ctx.beginPath(); ctx.moveTo(4, -2.2); ctx.lineTo(17, 0); ctx.lineTo(4, 2.2); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.restore();
-    }
-    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = shade(c[0], 0.3);
-    ctx.beginPath(); ctx.arc(0, 0, 2.2, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+    const on = n => hl < 0 || n.r === hl + 1 || (hl === 0 && n.r === 0);
+    const prims = [];
+    rds.forEach(ids => ids.forEach((id, k) => {
+      const nx = ids[(k + 1) % ids.length];
+      if (nx !== id && ids.length > 1) prims.push({ z: (pr[id].z + pr[nx].z) / 2, a: id, b: nx, kind: 'yarn' });
+      if (nodes[id].p >= 0) prims.push({ z: (pr[id].z + pr[nodes[id].p].z) / 2, a: id, b: nodes[id].p, kind: 'par' });
+    }));
+    nodes.forEach((n, id) => prims.push({ z: pr[id].z + 0.01, a: id, kind: 'atom' }));
+    prims.sort((p, q) => p.z - q.z);
+    const zs = pr.map(p => p.z), zmin = Math.min(...zs), zmax = Math.max(...zs), zr = (zmax - zmin) || 1;
+    ctx.lineCap = 'round';
+    prims.forEach(pm => {
+      const A = nodes[pm.a], pa = pr[pm.a], light = 0.65 + 0.5 * (pm.z - zmin) / zr;
+      if (pm.kind !== 'atom') {
+        const pb = pr[pm.b];
+        ctx.globalAlpha = on(A) ? 1 : 0.12;
+        if (pm.kind === 'yarn') { ctx.strokeStyle = shade(colOf(A.r), 0.7 * light); ctx.lineWidth = Math.max(1, 0.55 * sc); ctx.setLineDash([]); }
+        else { ctx.strokeStyle = 'rgba(90,70,60,.4)'; ctx.lineWidth = Math.max(0.6, 0.22 * sc); ctx.setLineDash([2, 2]); }
+        ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+        ctx.setLineDash([]);
+        return;
+      }
+      ctx.globalAlpha = on(A) ? 1 : 0.15;
+      const col = colOf(A.r), rad = { mr: 1.5, dc: 1.15, sc: 1.05, ch: 0.7, sl: 0.55 }[A.t] * sc;
+      ctx.lineWidth = Math.max(0.8, 0.18 * sc);
+      ctx.strokeStyle = shade(col, 0.5 * light);
+      ctx.fillStyle = A.t === 'ch' ? '#fbf7f0' : shade(col, light);
+      ctx.beginPath(); ctx.arc(pa.x, pa.y, rad, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      if (A.t === 'dc') { ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(pa.x, pa.y, rad * 0.38, 0, Math.PI * 2); ctx.fill(); }
+      if (A.t === 'sc') { ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = Math.max(0.8, 0.2 * sc); ctx.beginPath(); ctx.moveTo(pa.x - rad * .55, pa.y); ctx.lineTo(pa.x + rad * .55, pa.y); ctx.moveTo(pa.x, pa.y - rad * .55); ctx.lineTo(pa.x, pa.y + rad * .55); ctx.stroke(); }
+      if (A.t === 'mr') { ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.arc(pa.x, pa.y, rad * 0.35, 0, Math.PI * 2); ctx.fill(); }
+    });
     ctx.globalAlpha = 1;
   }
 
