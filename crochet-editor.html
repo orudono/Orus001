@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crochet Pattern Creator</title>
+<style>
+:root {
+  --bg: #faf6f1; --panel: #ffffff; --border: #e6dcd0; --text: #3b3028;
+  --muted: #8a7b6d; --accent: #d9577a; --accent-dark: #b73e61; --yarn: #e8738f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+header { padding: 14px 20px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+header h1 { font-size: 18px; margin: 0; }
+header span { color: var(--muted); font-size: 13px; }
+main { display: grid; grid-template-columns: 300px 1fr 360px; gap: 14px; padding: 14px; height: calc(100vh - 56px); }
+section { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; overflow: auto; }
+h2 { font-size: 14px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+label { display: block; font-size: 13px; margin: 10px 0 4px; }
+select, input[type=number], input[type=text] { width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; }
+input[type=color] { width: 100%; height: 34px; border: 1px solid var(--border); border-radius: 6px; padding: 2px; background: #fff; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.shapes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.shapes button { padding: 8px 4px; border: 1px solid var(--border); background: #fff; border-radius: 8px; cursor: pointer; font-size: 12px; }
+.shapes button.on { border-color: var(--accent); background: #fdeaf0; color: var(--accent-dark); font-weight: 600; }
+.shapes .ico { font-size: 22px; display: block; }
+.btn { width: 100%; margin-top: 14px; padding: 10px; background: var(--accent); color: #fff; border: 0; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn:hover { background: var(--accent-dark); }
+.btn.sec { background: #fff; color: var(--text); border: 1px solid var(--border); margin-top: 8px; font-size: 13px; font-weight: 500; padding: 7px; }
+#view { display: flex; flex-direction: column; padding: 0; }
+canvas { flex: 1; width: 100%; min-height: 0; cursor: grab; border-radius: 10px; }
+canvas:active { cursor: grabbing; }
+.hint { font-size: 12px; color: var(--muted); padding: 8px 14px; border-top: 1px solid var(--border); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+.stats div { background: var(--bg); border-radius: 8px; padding: 6px; text-align: center; font-size: 11px; color: var(--muted); }
+.stats b { display: block; font-size: 16px; color: var(--text); }
+.round { display: flex; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--border); font-size: 13px; line-height: 1.4; cursor: pointer; }
+.round.hl { background: #fdeaf0; }
+.round.done { opacity: .45; text-decoration: line-through; }
+.round .n { font-weight: 700; min-width: 34px; color: var(--accent-dark); }
+.round .c { color: var(--muted); white-space: nowrap; }
+.round input { margin-top: 3px; }
+.note { font-size: 13px; background: var(--bg); border-radius: 8px; padding: 8px 10px; margin: 8px 0; }
+.legend { font-size: 12px; color: var(--muted); margin-top: 12px; }
+@media (max-width: 1000px) { main { grid-template-columns: 1fr; height: auto; } #view { height: 420px; } }
+</style>
+</head>
+<body>
+<header><h1>🧶 Crochet Pattern Creator</h1><span>Tạo pattern amigurumi từng vòng từ hình 3D</span></header>
+<main>
+  <section id="controls">
+    <h2>Hình dạng</h2>
+    <div class="shapes" id="shapes"></div>
+
+    <h2 style="margin-top:16px">Kích thước (cm)</h2>
+    <div class="row2">
+      <div><label>Chiều cao</label><input type="number" id="height" value="8" min="1" max="60" step="0.5"></div>
+      <div><label>Đường kính</label><input type="number" id="diam" value="7" min="1" max="60" step="0.5"></div>
+    </div>
+
+    <h2 style="margin-top:16px">Gauge (độ dày len/móc)</h2>
+    <div class="row2">
+      <div><label>Rộng 1 mũi (cm)</label><input type="number" id="sw" value="0.5" min="0.2" max="1.5" step="0.05"></div>
+      <div><label>Cao 1 vòng (cm)</label><input type="number" id="rh" value="0.45" min="0.2" max="1.5" step="0.05"></div>
+    </div>
+    <label>Màu len</label><input type="color" id="color" value="#e8738f">
+    <label>Cách bắt đầu</label>
+    <select id="start">
+      <option value="ring">Vòng thần kỳ (magic ring) 6 mũi</option>
+      <option value="chain">Dây xích 2, 6 mũi vào xích đầu</option>
+    </select>
+    <label>Mũi dùng</label>
+    <select id="stitch"><option value="sc">Mũi đơn (sc)</option></select>
+
+    <button class="btn" id="gen">Tạo pattern</button>
+    <button class="btn sec" id="copy">Sao chép pattern</button>
+    <button class="btn sec" id="print">In / Lưu PDF</button>
+  </section>
+
+  <section id="view">
+    <canvas id="cv"></canvas>
+    <div class="hint">Kéo chuột để xoay · cuộn chuột để zoom · click một vòng ở bên phải để làm nổi bật trên mô hình</div>
+  </section>
+
+  <section id="out">
+    <h2>Pattern</h2>
+    <div class="stats" id="stats"></div>
+    <div id="pattern"></div>
+    <div class="legend"><b>Ký hiệu:</b> MR = magic ring · sc = mũi đơn · inc = tăng (2 sc vào 1 mũi) · dec = giảm (gộp 2 mũi) · FO = cắt chỉ</div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const SHAPES = {
+    sphere:   { name: 'Cầu',     ico: '⚪', r: t => Math.sin(Math.PI * t) },
+    egg:      { name: 'Trứng',   ico: '🥚', r: t => Math.pow(Math.sin(Math.PI * Math.pow(t, 0.75)), 1.0) },
+    cylinder: { name: 'Trụ',     ico: '🥫', r: t => 1 },
+    cone:     { name: 'Nón',     ico: '🔺', r: t => 1 - t },
+    capsule:  { name: 'Viên nang', ico: '💊', r: t => { const e = 0.3; return t < e ? Math.sin(Math.PI / 2 * t / e) : t > 1 - e ? Math.sin(Math.PI / 2 * (1 - t) / e) : 1; } },
+    bell:     { name: 'Chuông',  ico: '🔔', r: t => Math.pow(1 - t, 0.6) * (0.35 + 0.65 * Math.min(1, (1 - t) * 2)) + 0.0 },
+  };
+  let shape = 'sphere';
+  let rounds = [];      // {n, text, count}
+  let hl = -1;
+  const $ = id => document.getElementById(id);
+
+  // ---------- UI ----------
+  const shapesEl = $('shapes');
+  Object.keys(SHAPES).forEach(k => {
+    const b = document.createElement('button');
+    b.innerHTML = '<span class="ico">' + SHAPES[k].ico + '</span>' + SHAPES[k].name;
+    b.onclick = () => { shape = k; refreshShapes(); generate(); };
+    b.dataset.k = k;
+    shapesEl.appendChild(b);
+  });
+  function refreshShapes() { [...shapesEl.children].forEach(b => b.classList.toggle('on', b.dataset.k === shape)); }
+  refreshShapes();
+
+  // ---------- Pattern generation ----------
+  // Distribute `d` special stitches (inc/dec) evenly over `n` previous stitches.
+  // Returns compressed instruction like "(sc 4, inc) x 3, sc 2".
+  function distribute(n, d, kind) {
+    const use = kind === 'inc' ? 1 : 2;           // prev stitches consumed per special
+    const plain = n - d * use;
+    // d groups, each: sc a, special. Spread `plain` among groups.
+    const base = Math.floor(plain / d), extra = plain % d;
+    const groups = [];
+    for (let i = 0; i < d; i++) {
+      // Bresenham-like spread of extras
+      const a = base + (Math.floor((i + 1) * extra / d) - Math.floor(i * extra / d));
+      groups.push(a);
+    }
+    // run-length compress consecutive equal groups
+    const parts = [];
+    let i = 0;
+    while (i < groups.length) {
+      let j = i; while (j < groups.length && groups[j] === groups[i]) j++;
+      const m = j - i, a = groups[i];
+      const unit = (a > 0 ? 'sc ' + a + ', ' : '') + kind;
+      if (m === 1) parts.push(unit);
+      else parts.push('(' + unit + ') x ' + m);
+      i = j;
+    }
+    return parts.join(', ');
+  }
+
+  function buildRounds() {
+    const H = +$('height').value, D = +$('diam').value;
+    const sw = +$('sw').value, rh = +$('rh').value;
+    const R = D / 2;
+    const f = SHAPES[shape].r;
+    const total = Math.max(3, Math.round(H / rh));
+    const counts = [6];
+    for (let k = 1; k < total; k++) {
+      // cone/bell start at tip (t = 0 is tip for cone => r = 1 - t is wrong direction), so flip below
+      const t = (k + 0.5) / total;
+      let r = R * f(shapeParam(t));
+      let target = Math.max(6, Math.round(2 * Math.PI * r / sw));
+      const prev = counts[k - 1];
+      target = Math.min(target, prev + 6, prev * 2);
+      target = Math.max(target, prev - 6, Math.ceil(prev / 2));
+      counts.push(Math.max(6, target));
+    }
+    // taper to close (flat cap / tip), 6 dec per round max
+    while (counts[counts.length - 1] > 6) counts.push(Math.max(6, counts[counts.length - 1] - 6));
+    // ensure the last taper ends at 6 and drop trailing duplicates of 6 > 1
+    while (counts.length > 2 && counts[counts.length - 1] === 6 && counts[counts.length - 2] === 6 && counts.length > total + 6) counts.pop();
+
+    const out = [];
+    const startTxt = $('start').value === 'ring' ? '6 sc into magic ring' : 'ch 2, 6 sc in 2nd ch from hook';
+    out.push({ n: 6, text: startTxt, count: 6 });
+    for (let k = 1; k < counts.length; k++) {
+      const prev = counts[k - 1], n = counts[k], diff = n - prev;
+      let text;
+      if (diff === 0) text = 'sc in each st around';
+      else if (diff > 0) text = distribute(prev, diff, 'inc');
+      else text = distribute(prev, -diff, 'dec');
+      out.push({ n, text, count: n });
+    }
+    // merge identical consecutive "sc around" rounds into ranges
+    const merged = [];
+    out.forEach((r, i) => {
+      const last = merged[merged.length - 1];
+      if (last && r.text === 'sc in each st around' && last.text === r.text && last.count === r.count) last.to = i + 1;
+      else merged.push({ from: i + 1, to: i + 1, text: r.text, count: r.count });
+    });
+    return { merged, flat: out, counts };
+  }
+
+  // Shapes that "start" at the tip (cone, bell) need their profile reversed:
+  // pattern is worked from the tip outward, so t=0 is the tip.
+  function shapeParam(t) { return (shape === 'cone' || shape === 'bell') ? 1 - t : t; }
+
+  function generate() {
+    const res = buildRounds();
+    rounds = res.flat;
+    const el = $('pattern'); el.innerHTML = '';
+    const done = loadDone();
+    res.merged.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'round';
+      const label = m.from === m.to ? 'R' + m.from : 'R' + m.from + '-' + m.to;
+      const rep = m.from === m.to ? '' : ' (' + (m.to - m.from + 1) + ' vòng)';
+      div.innerHTML = '<input type="checkbox"><span class="n">' + label + '</span><span>' + m.text + rep + '</span><span class="c">[' + m.count + ']</span>';
+      const cb = div.querySelector('input');
+      cb.checked = !!done[m.from];
+      div.classList.toggle('done', cb.checked);
+      cb.onclick = e => {
+        e.stopPropagation();
+        div.classList.toggle('done', cb.checked);
+        done[m.from] = cb.checked; saveDone(done);
+      };
+      div.onclick = () => { hl = m.from - 1; [...el.children].forEach(c => c.classList.remove('hl')); div.classList.add('hl'); draw(); };
+      el.appendChild(div);
+    });
+    const last = rounds[rounds.length - 1];
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.textContent = 'Nhồi bông trước khi đóng kín. Còn ' + last.n + ' mũi: dec đến khi còn 6 mũi → FO, luồn chỉ qua vòng mũi trước (front loops) rồi kéo chặt.';
+    el.appendChild(note);
+
+    const totalSt = rounds.reduce((a, r) => a + r.count, 0);
+    const maxSt = Math.max(...rounds.map(r => r.count));
+    $('stats').innerHTML =
+      '<div><b>' + rounds.length + '</b>vòng</div>' +
+      '<div><b>' + maxSt + '</b>mũi lớn nhất</div>' +
+      '<div><b>' + totalSt + '</b>tổng mũi</div>';
+    hl = -1;
+    draw();
+  }
+  function key() { return 'crochet-done-' + [shape, $('height').value, $('diam').value, $('sw').value, $('rh').value].join('|'); }
+  function loadDone() { try { return JSON.parse(localStorage.getItem(key())) || {}; } catch (e) { return {}; } }
+  function saveDone(d) { try { localStorage.setItem(key(), JSON.stringify(d)); } catch (e) {} }
+
+  // ---------- 3D preview ----------
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  let rotY = 0.6, rotX = 0.35, zoom = 1, drag = null;
+  function resize() {
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = r.width * dpr; cv.height = r.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+  window.addEventListener('resize', resize);
+  cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    rotY += (e.clientX - drag.x) * 0.01; rotX += (e.clientY - drag.y) * 0.01;
+    rotX = Math.max(-1.5, Math.min(1.5, rotX));
+    drag = { x: e.clientX, y: e.clientY }; draw();
+  });
+  cv.addEventListener('pointerup', () => drag = null);
+  cv.addEventListener('wheel', e => { e.preventDefault(); zoom = Math.max(0.4, Math.min(4, zoom * (e.deltaY < 0 ? 1.1 : 0.9))); draw(); }, { passive: false });
+
+  function shade(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = v => Math.max(0, Math.min(255, Math.round(v * f)));
+    return 'rgb(' + c(n >> 16) + ',' + c((n >> 8) & 255) + ',' + c(n & 255) + ')';
+  }
+
+  function draw() {
+    const w = cv.clientWidth, h = cv.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+    if (!rounds.length) return;
+    const sw = +$('sw').value, rh = +$('rh').value;
+    const color = $('color').value;
+    const pts = [];
+    const N = rounds.length;
+    const Htot = N * rh;
+    const scale = Math.min(w, h) / (Math.max(Htot, +$('diam').value) * 1.5) * zoom;
+    const cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
+    rounds.forEach((rd, i) => {
+      const n = rd.count;
+      const rad = n * sw / (2 * Math.PI);
+      const y = (i + 0.5) * rh - Htot / 2;
+      for (let j = 0; j < n; j++) {
+        const a = (j + (i % 2) * 0.5) / n * Math.PI * 2;
+        let x = Math.cos(a) * rad, z = Math.sin(a) * rad, yy = -y;
+        // rotate Y
+        let x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
+        // rotate X
+        let y1 = yy * cx - z1 * sx, z2 = yy * sx + z1 * cx;
+        pts.push({ x: w / 2 + x1 * scale, y: h / 2 + y1 * scale, z: z2, i, a });
+      }
+    });
+    pts.sort((p, q) => p.z - q.z);
+    const sizeW = sw * scale * 0.62, sizeH = rh * scale * 0.62;
+    const maxZ = Math.max(...pts.map(p => p.z)) || 1, minZ = Math.min(...pts.map(p => p.z));
+    pts.forEach(p => {
+      const depth = (p.z - minZ) / ((maxZ - minZ) || 1);
+      const light = 0.55 + 0.6 * depth;
+      const on = hl === p.i;
+      ctx.fillStyle = on ? '#ffd23f' : shade(color, light);
+      ctx.strokeStyle = shade(color, light * 0.65);
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, Math.max(1.5, sizeW), Math.max(1.5, sizeH), 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+    });
+  }
+
+  // ---------- actions ----------
+  $('gen').onclick = generate;
+  ['height', 'diam', 'sw', 'rh', 'start'].forEach(id => $(id).addEventListener('change', generate));
+  $('color').addEventListener('input', draw);
+
+  function patternText() {
+    const lines = [SHAPES[shape].name + ' — ' + $('height').value + ' x ' + $('diam').value + ' cm', ''];
+    let i = 0;
+    [...$('pattern').querySelectorAll('.round')].forEach(el => {
+      lines.push(el.querySelector('.n').textContent + ': ' + el.children[2].textContent + ' ' + el.children[3].textContent);
+    });
+    lines.push('', 'Nhồi bông, dec đến khi còn 6 mũi, FO.');
+    return lines.join('\n');
+  }
+  $('copy').onclick = () => {
+    const t = patternText();
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
+      () => { $('copy').textContent = 'Đã sao chép ✓'; setTimeout(() => $('copy').textContent = 'Sao chép pattern', 1500); },
+      () => { prompt('Sao chép pattern:', t); });
+  };
+  $('print').onclick = () => {
+    const w = window.open('', '_blank');
+    w.document.write('<pre style="font:14px/1.6 system-ui;white-space:pre-wrap">' + patternText().replace(/</g, '&lt;') + '</pre>');
+    w.document.close(); w.print();
+  };
+
+  resize();
+  generate();
+})();
+</script>
+</body>
+</html>
