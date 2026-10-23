@@ -51,7 +51,7 @@ canvas:active { cursor: grabbing; }
 </style>
 </head>
 <body>
-<header><h1>🧶 cro001</h1><span>Crochet pattern creator</span><div class="tabs"><button data-m="ami" class="on">Amigurumi 3D</button><button data-m="granny">Granny square</button><button data-m="stitch">Mũi 3D (thử)</button></div></header>
+<header><h1>🧶 cro001</h1><span>Crochet pattern creator</span><div class="tabs"><button data-m="core">Lõi (đồ thị)</button><button data-m="ami" class="on">Amigurumi 3D</button><button data-m="granny">Granny square</button><button data-m="stitch">Mũi 3D (thử)</button></div></header>
 <main>
   <section id="controls">
    <div id="ctlAmi">
@@ -92,6 +92,11 @@ canvas:active { cursor: grabbing; }
       <div><label>Viền ngoài</label><input type="color" id="gc3" value="#8a1f2e"></div>
     </div>
     <div class="note">Pattern chữ là gợi ý dựng theo mẫu ảnh, bạn nên thử móc mẫu nhỏ để chỉnh.</div>
+   </div>
+   <div id="ctlCore" style="display:none">
+    <h2>Pattern (chữ)</h2>
+    <textarea id="coreSrc" spellcheck="false" style="width:100%;height:420px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--border);border-radius:8px;padding:8px;resize:vertical"></textarea>
+    <div class="note">Sửa chữ là đồ thị đổi theo. Mũi: ch sc hdc dc tr. Màu: red orange green blue purple pink yellow... hoặc #rrggbb.</div>
    </div>
    <div id="ctlStitch" style="display:none">
     <h2>Mũi xích (chain)</h2>
@@ -231,6 +236,7 @@ canvas:active { cursor: grabbing; }
   function generate() {
     if (mode === 'granny') return generateGranny();
     if (mode === 'stitch') return generateStitch();
+    if (mode === 'core') return generateCore();
     const res = buildRounds();
     rounds = res.flat;
     const el = $('pattern'); el.innerHTML = '';
@@ -302,6 +308,7 @@ canvas:active { cursor: grabbing; }
     ctx.clearRect(0, 0, w, h);
     if (mode === 'granny') return drawGranny(w, h);
     if (mode === 'stitch') return drawStitch(w, h);
+    if (mode === 'core') return drawCore(w, h);
     if (!rounds.length) return;
     const sw = +$('sw').value, rh = +$('rh').value;
     const color = $('color').value;
@@ -353,10 +360,13 @@ canvas:active { cursor: grabbing; }
     $('ctlGran').style.display = mode === 'granny' ? '' : 'none';
     $('glegend').style.display = mode === 'granny' ? '' : 'none';
     $('ctlStitch').style.display = mode === 'stitch' ? '' : 'none';
-    document.querySelector('.hint').textContent = mode === 'stitch' ? 'Sợi là ống trơn kiểu hình vẽ kỹ thuật · kéo để xoay, cuộn để zoom · click một bước để làm nổi bật' : mode === 'ami'
+    $('ctlCore').style.display = mode === 'core' ? '' : 'none';
+    document.querySelector('main').style.gridTemplateColumns = mode === 'core' && window.innerWidth > 1000 ? '440px 1fr 300px' : '';
+    document.querySelectorAll('.legend').forEach(l => { if (l.id !== 'glegend') l.style.display = mode === 'core' ? 'none' : ''; });
+    document.querySelector('.hint').textContent = mode === 'core' ? 'Mỗi nút là một mũi, màu theo pattern · kéo để xoay, cuộn để zoom' : mode === 'stitch' ? 'Sợi là ống trơn kiểu hình vẽ kỹ thuật · kéo để xoay, cuộn để zoom · click một bước để làm nổi bật' : mode === 'ami'
       ? 'Kéo chuột để xoay · cuộn chuột để zoom · click một vòng ở bên phải để làm nổi bật trên mô hình'
       : 'Mỗi mũi là một nút (ball-and-stick) · kéo để xoay, cuộn để zoom · click một vòng để làm nổi bật';
-    if (mode === 'stitch') { rotX = 0.15; rotY = 0.5; zoom = 1; } else if (mode === 'granny') { rotX = 0.4; rotY = 0.3; zoom = 1; } else { rotX = 0.35; rotY = 0.6; zoom = 1; }
+    if (mode === 'core') { rotX = 0.05; rotY = 0.18; zoom = 1; } else if (mode === 'stitch') { rotX = 0.15; rotY = 0.5; zoom = 1; } else if (mode === 'granny') { rotX = 0.4; rotY = 0.3; zoom = 1; } else { rotX = 0.35; rotY = 0.6; zoom = 1; }
     generate();
   });
 
@@ -466,6 +476,182 @@ canvas:active { cursor: grabbing; }
       ctx.lineCap = 'round'; path(pc.run); ctx.strokeStyle = pc.fill; ctx.lineWidth = pc.width; ctx.stroke(); ctx.lineCap = 'butt';
     });
     ctx.globalAlpha = 1;
+  }
+
+  // ---------- Lõi: pattern chữ -> đồ thị mũi (nút = mũi, thanh = liên kết) ----------
+  const CORE_COLORS = { red: '#ff1010', orange: '#ffa010', green: '#0f7a1f', blue: '#1010ff', purple: '#780a86', pink: '#f6bfd2',
+    yellow: '#f5d90a', black: '#222222', white: '#f2f2f2', gray: '#9ca3af', grey: '#9ca3af', brown: '#8b5a2b', cyan: '#06b6d4', teal: '#0d9488' };
+  const CORE_DEFAULT = '#8aa0b4';
+  const CORE_H = { ch: 0.6, sc: 1.1, hdc: 1.4, dc: 1.7, tr: 2.0 };   // chiều cao thanh dọc theo loại mũi
+  const CORE_SAMPLE = `// Pattern mẫu
+// # Tên khối   |   [màu] đứng riêng = màu cho mọi hàng sau nó
+// hàng: số mũi [màu], ...   (mũi: ch sc hdc dc tr)   |   "3 [pink]:" = cả hàng 3 màu hồng
+// Nhóm: (1 sc, 1 dc) [màu]
+// Hàng 1: số ch = số mũi + ch quay đầu (sc/hdc: 1 ch, dc/tr: 2 ch)
+
+# Gauge
+[red]   // mọi mũi trong khối màu đỏ
+1: 5 ch, 1 sc [orange], 1 hdc [green], 1 dc [blue], 1 tr [purple]
+2: 1 ch, 1 sc [orange], 1 hdc [green], 1 dc [blue], 1 tr [purple]
+3 [pink]: 1 ch, 4 sc
+4: 2 ch, 4 dc
+`;
+  function coreColor(name) {
+    if (!name) return null;
+    name = name.trim().toLowerCase();
+    if (CORE_COLORS[name]) return CORE_COLORS[name];
+    return /^#[0-9a-f]{6}$/.test(name) ? name : null;
+  }
+  function splitTop(str) {
+    const out = []; let d = 0, cur = '';
+    for (const c of str) {
+      if (c === '(') d++; if (c === ')') d--;
+      if (c === ',' && d === 0) { out.push(cur); cur = ''; } else cur += c;
+    }
+    if (cur.trim()) out.push(cur);
+    return out;
+  }
+  function parseItems(str, inherit, errs, ln) {
+    const res = [];
+    splitTop(str).forEach(raw => {
+      const part = raw.trim(); if (!part) return;
+      if (part[0] === '(') {
+        const close = part.lastIndexOf(')'), inner = part.slice(1, close), rest = part.slice(close + 1).trim();
+        const m = rest.match(/^\[([^\]]*)\]$/);
+        const col = m ? coreColor(m[1]) : null;
+        if (m && !col) errs.push('Dòng ' + ln + ': màu "' + m[1] + '" không hợp lệ');
+        res.push(...parseItems(inner, col || inherit, errs, ln));
+        return;
+      }
+      const m = part.match(/^(\d+)\s*(ch|sc|hdc|dc|tr)(?:\s*\[([^\]]*)\])?$/i);
+      if (!m) { errs.push('Dòng ' + ln + ': không hiểu "' + part + '"'); return; }
+      const col = m[3] ? coreColor(m[3]) : null;
+      if (m[3] && !col) errs.push('Dòng ' + ln + ': màu "' + m[3] + '" không hợp lệ');
+      for (let i = 0; i < +m[1]; i++) res.push({ t: m[2].toLowerCase(), color: col || inherit });
+    });
+    return res;
+  }
+  function parseCore(src) {
+    const errs = [], blocks = [];
+    let cur = null, blockColor = null;
+    src.split('\n').forEach((line, i) => {
+      const ln = i + 1, s = line.replace(/\/\/.*$/, '').trim();
+      if (!s) return;
+      if (s[0] === '#') { cur = { name: s.slice(1).trim() || 'Khối', rows: [] }; blocks.push(cur); blockColor = null; return; }
+      const mc = s.match(/^\[([^\]]*)\]$/);
+      if (mc) { const c = coreColor(mc[1]); if (c) blockColor = c; else errs.push('Dòng ' + ln + ': màu "' + mc[1] + '" không hợp lệ'); return; }
+      const mr = s.match(/^(\d+)\s*(?:\[([^\]]*)\])?\s*:\s*(.*)$/);
+      if (!mr) { errs.push('Dòng ' + ln + ': không hiểu "' + s + '"'); return; }
+      if (!cur) { cur = { name: 'Khối', rows: [] }; blocks.push(cur); }
+      const rowCol = mr[2] ? coreColor(mr[2]) : null;
+      if (mr[2] && !rowCol) errs.push('Dòng ' + ln + ': màu "' + mr[2] + '" không hợp lệ');
+      cur.rows.push({ num: +mr[1], ln, st: parseItems(mr[3], rowCol || blockColor || CORE_DEFAULT, errs, ln) });
+    });
+    return { blocks, errs };
+  }
+  function layoutBlock(block, xoff, nodes, edges, warns) {
+    const add = (x, y, z, t, color) => { nodes.push({ x: x + xoff, y, z, t, color }); return nodes.length - 1; };
+    const link = (a, b, color) => { if (a != null && b != null) edges.push({ a, b, color }); };
+    let prevTop = [], lastCol = 0, lastDir = 1;
+    block.rows.forEach((row, idx) => {
+      const z = idx * 0.12, dir = idx === 0 ? -1 : -lastDir;
+      let lead = 0; while (lead < row.st.length && row.st[lead].t === 'ch') lead++;
+      let chains = row.st.slice(0, lead), slots = row.st.slice(lead);
+      if (!slots.length) { slots = chains; chains = []; }
+      const S = slots.length, start = idx === 0 ? S - 1 : lastCol, col = k => start + dir * k;
+      lastCol = col(S - 1); lastDir = dir;
+      let ground = [], turnItems = chains;
+      if (idx === 0) {
+        const nT = Math.max(0, chains.length - S);
+        if (chains.length < S && chains.length) warns.push('Hàng ' + row.num + ' (' + block.name + '): cần ít nhất ' + S + ' ch cho ' + S + ' mũi, mới có ' + chains.length);
+        turnItems = chains.slice(0, nT);
+        const gItems = chains.slice(nT);
+        ground = slots.map((s, k) => add(col(k), 0, z, 'ch', (gItems[k] || gItems[gItems.length - 1] || s).color));
+        if (!chains.length && S && slots[0].t !== 'ch') warns.push('Hàng ' + row.num + ' (' + block.name + '): hàng đầu nên có ch nền');
+      }
+      const baseOf = k => idx === 0 ? ground[k] : prevTop[col(k)];
+      const bi0 = baseOf(0), yb = bi0 != null ? nodes[bi0].y : 0;
+      const y0 = yb + CORE_H[slots[0].t];
+      const turn = turnItems.map((c, i) => add(col(0) - dir * 0.9, yb + (y0 - yb) * (i + 0.5) / turnItems.length, z, 'ch', c.color));
+      // chuỗi nền (hàng 1): ch quay đầu -> các ch nền
+      if (idx === 0) {
+        const seq = turn.concat(ground);
+        for (let i = 1; i < seq.length; i++) link(seq[i - 1], seq[i], nodes[seq[i]].color);
+      } else {
+        for (let i = 1; i < turn.length; i++) link(turn[i - 1], turn[i], nodes[turn[i]].color);
+        if (turn.length) link(baseOf(0), turn[0], nodes[turn[0]].color);
+      }
+      const top = [];
+      let prev = turn.length ? turn[turn.length - 1] : null;
+      slots.forEach((s, k) => {
+        const bi = baseOf(k);
+        if (bi == null) warns.push('Hàng ' + row.num + ' (' + block.name + '): mũi thứ ' + (k + 1) + ' không có mũi hàng trước để móc vào');
+        const id = add(col(k), (bi != null ? nodes[bi].y : 0) + (idx === 0 && s.t === 'ch' && !chains.length ? 0 : CORE_H[s.t]), z, s.t, s.color);
+        link(prev, id, s.color);
+        link(id, bi, s.color);
+        prev = id; top[col(k)] = id;
+      });
+      const merged = prevTop.slice();
+      top.forEach((id, c) => { if (id != null) merged[c] = id; });
+      prevTop = merged;
+    });
+    return Math.max(1, ...nodes.filter(n => n.x >= xoff).map(n => n.x - xoff + 1));
+  }
+  function buildCoreModel() {
+    const { blocks, errs } = parseCore($('coreSrc').value);
+    const nodes = [], edges = [], warns = [];
+    let x = 0;
+    blocks.forEach(b => { if (b.rows.length) x += layoutBlock(b, x, nodes, edges, warns) + 3; });
+    return { blocks, nodes, edges, errs, warns };
+  }
+  function generateCore() {
+    const m = buildCoreModel(), el = $('pattern'); el.innerHTML = '';
+    m.blocks.forEach(b => {
+      const h = document.createElement('div'); h.className = 'note'; h.innerHTML = '<b># ' + b.name.replace(/</g, '&lt;') + '</b>'; el.appendChild(h);
+      b.rows.forEach((r, i) => {
+        const div = document.createElement('div'); div.className = 'round';
+        const dirTxt = i % 2 === 0 ? '←' : '→';
+        const sum = []; r.st.forEach(s => { const l = sum[sum.length - 1]; if (l && l.t === s.t) l.n++; else sum.push({ t: s.t, n: 1 }); });
+        div.innerHTML = '<span class="n">H' + (i + 1) + ' ' + dirTxt + '</span><span>' + sum.map(s => s.n + ' ' + s.t).join(', ') + '</span><span class="c">(' + r.st.length + ')</span>';
+        el.appendChild(div);
+      });
+    });
+    [...m.errs, ...m.warns].forEach(t => { const n = document.createElement('div'); n.className = 'note'; n.style.color = '#b73e61'; n.textContent = '⚠ ' + t; el.appendChild(n); });
+    $('stats').innerHTML = '<div><b>' + m.blocks.length + '</b>khối</div><div><b>' + m.nodes.length + '</b>nút (mũi)</div><div><b>' + m.edges.length + '</b>liên kết</div>';
+    try { localStorage.setItem('cro001-core', $('coreSrc').value); } catch (e) {}
+    draw();
+  }
+  function drawCore(w, h) {
+    const m = buildCoreModel(), N = m.nodes;
+    if (!N.length) return;
+    const xs = N.map(n => n.x), ys = N.map(n => n.y);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const ext = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 3) + 2;
+    const sc = Math.min(w, h) * 0.85 / ext * zoom;
+    const cyA = Math.cos(rotY), syA = Math.sin(rotY), cxA = Math.cos(rotX), sxA = Math.sin(rotX);
+    const pr = N.map(n => {
+      const x = n.x - cx, y = n.y - cy, z = n.z * 3;
+      const x1 = x * cyA + z * syA, z1 = -x * syA + z * cyA;
+      return { x: w / 2 + x1 * sc, y: h / 2 - (y * cxA + z1 * sxA) * sc, z: -y * sxA + z1 * cxA };
+    });
+    const prims = [];
+    m.edges.forEach(e => prims.push({ z: (pr[e.a].z + pr[e.b].z) / 2, e }));
+    N.forEach((n, i) => prims.push({ z: pr[i].z + 0.05, i }));
+    prims.sort((a, b) => a.z - b.z);
+    ctx.lineCap = 'round';
+    prims.forEach(p => {
+      if (p.e) {
+        const a = pr[p.e.a], b = pr[p.e.b];
+        ctx.strokeStyle = p.e.color; ctx.lineWidth = 0.2 * sc;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        return;
+      }
+      const n = N[p.i], q = pr[p.i], r = 0.36 * sc;
+      const g = ctx.createRadialGradient(q.x - r * 0.35, q.y - r * 0.4, r * 0.1, q.x, q.y, r);
+      g.addColorStop(0, shade(n.color, 1.45)); g.addColorStop(0.55, n.color); g.addColorStop(1, shade(n.color, 0.62));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, Math.PI * 2); ctx.fill();
+    });
   }
 
   // ---------- Granny square ----------
@@ -654,6 +840,7 @@ canvas:active { cursor: grabbing; }
 
 
   function patternText() {
+    if (mode === 'core') return $('coreSrc').value;
     const lines = mode === 'stitch' ? ['Mũi xích x ' + $('sn').value, ''] : mode === 'granny' ? ['Granny square hoa — ' + $('petals').value + ' cánh', ''] : [SHAPES[shape].name + ' — ' + $('height').value + ' x ' + $('diam').value + ' cm', ''];
     let i = 0;
     [...$('pattern').querySelectorAll('.round')].forEach(el => {
@@ -674,6 +861,8 @@ canvas:active { cursor: grabbing; }
     w.document.close(); w.print();
   };
 
+  try { $('coreSrc').value = localStorage.getItem('cro001-core') || CORE_SAMPLE; } catch (e) { $('coreSrc').value = CORE_SAMPLE; }
+  $('coreSrc').addEventListener('input', () => { if (mode === 'core') generateCore(); });
   resize();
   generate();
 })();
